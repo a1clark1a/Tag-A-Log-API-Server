@@ -6,6 +6,7 @@ const helmet = require("helmet");
 
 const { NODE_ENV } = require("./config");
 const erroHandler = require("./middleware/error-handler");
+const logsRouter = require("./logs-router/logs-router");
 
 const app = express();
 
@@ -15,9 +16,10 @@ app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 
-app.get("/", (req, res) => {
-  res.send("Hello, world!");
-});
+app.use("/api/logs", logsRouter);
+//TODO use tagsRouter
+//TODO use usersRouter
+//TODO use authRouter
 
 app.use(erroHandler);
 

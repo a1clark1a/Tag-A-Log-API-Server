@@ -9,12 +9,35 @@ const logsRouter = express.Router();
 const jsonBodyParser = express.json();
 
 logsRouter.route("/").get((req, res, next) => {
-  res.send("This will get you all the logs");
+  const knexInstance = req.app.get("db");
+  LogsService.getAllLogs(knexInstance)
+    .then((logs) => {
+      logger.info(`all logs requested`);
+      res.json(logs);
+    })
+    .catch(next);
 });
 
-logsRouter.route("/:logsId").all((req, res, next) => {
-  const { logsId } = req.params;
-  res.send(`Successfuly called logs with id of ${logsId}`);
-});
+logsRouter
+  .route("/:logsId")
+  .all((req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { logsId } = req.params;
+    LogsService.getLogsById(knexInstance, logsId)
+      .then((log) => {
+        if (!log) {
+          logger.error("log does not exist when after calling getLogsById");
+          return res.status(404).json({
+            error: { message: `Log does not exist` },
+          });
+        }
+        res.log = log;
+        next();
+      })
+      .catch(next);
+  })
+  .get((req, res, next) => {
+    res.json(res.log);
+  });
 
 module.exports = logsRouter;

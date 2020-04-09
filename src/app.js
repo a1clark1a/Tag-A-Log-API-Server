@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const { NODE_ENV } = require("./config");
 const erroHandler = require("./middleware/error-handler");
 const logsRouter = require("./logs-router/logs-router");
+const tagsRouter = require("./tags-router/tags-router");
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use(helmet());
 app.use(cors());
 
 app.use("/api/logs", logsRouter);
-//TODO use tagsRouter
+app.use("/api/tags", tagsRouter);
 //TODO use usersRouter
 //TODO use authRouter
 

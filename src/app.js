@@ -9,6 +9,8 @@ const erroHandler = require("./middleware/error-handler");
 const logsRouter = require("./logs-router/logs-router");
 const tagsRouter = require("./tags-router/tags-router");
 
+const authRouter = require("./auth/auth-router");
+
 const app = express();
 
 const morganOption = NODE_ENV === "production" ? " tiny" : "common";
@@ -20,7 +22,7 @@ app.use(cors());
 app.use("/api/logs", logsRouter);
 app.use("/api/tags", tagsRouter);
 //TODO use usersRouter
-//TODO use authRouter
+app.use("/api/auth", authRouter);
 
 app.use(erroHandler);
 

@@ -17,6 +17,27 @@ const LogsService = {
     return knex.from("logs").select("*").where("id", logsId).first();
   },
 
+  insertLogs(knex, newLogs) {
+    return knex
+      .insert(newLogs)
+      .into("logs")
+      .returning("*")
+      .then((rows) => {
+        return rows[0];
+      });
+  },
+
+  updateLogs(knex, logs_id, logsToUpdate) {
+    return knex.from("logs").where("id", logs_id).update(logsToUpdate);
+  },
+
+  deleteLogs(knex, logs_id, user_id) {
+    return knex("logs")
+      .where({ id: logs_id, user_id: user_id })
+      .first()
+      .delete();
+  },
+
   sanitizeLogs(logs) {
     return {
       id: logs.id,

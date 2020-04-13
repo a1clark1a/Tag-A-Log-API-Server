@@ -23,7 +23,11 @@ const UsersService = {
   },
 
   hasUserWithEmail(knex, email) {
-    return knex.from("users").where({ email }).first();
+    return knex
+      .from("users")
+      .where({ email })
+      .first()
+      .then((user) => !!user);
   },
 
   validatePassword(password) {

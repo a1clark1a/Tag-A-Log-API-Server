@@ -2,28 +2,65 @@ const express = require("express");
 const path = require("path");
 
 const logger = require("../middleware/logger");
-
+const { requireAuth } = require("../middleware/jwt-auth");
 const LogsService = require("./logs-service");
 
 const logsRouter = express.Router();
 const jsonBodyParser = express.json();
 
-logsRouter.route("/").get((req, res, next) => {
-  const knexInstance = req.app.get("db");
-  LogsService.getAllLogs(knexInstance)
-    .then((logs) => {
-      logger.info(`all logs requested`);
-      res.json(logs);
-    })
-    .catch(next);
-});
-
+//GET ALL logs
 logsRouter
-  .route("/:logsId")
-  .all((req, res, next) => {
+  .route("/")
+  .get(
+    /*TODO requireAuth here */ (req, res, next) => {
+      const knexInstance = req.app.get("db");
+      LogsService.getAllLogs(knexInstance)
+        .then((logs) => {
+          logger.info(`all logs requested`);
+          res.json(logs.map(LogsService.sanitizeLogs));
+        })
+        .catch(next);
+    }
+  )
+  //POST a log
+  .post(/*TODO requireAUth here */ jsonBodyParser, (req, res, next) => {
+    const { log_name, description, url, user_id, num_tags } = req.body;
+    const newLog = { log_name, description, user_id };
     const knexInstance = req.app.get("db");
-    const { logsId } = req.params;
-    LogsService.getLogsById(knexInstance, logsId)
+
+    for (const [key, value] of Object.entries(newLog)) {
+      if (value == null) {
+        logger.error(`Posting log Missing ${key} in request body`);
+        return res.status(400).json({
+          error: {
+            message: `Uploading a log requires log name and description and must be signed in`,
+          },
+        });
+      }
+    }
+    newLog.url = url;
+    newLog.num_tags = 0;
+    LogsService.insertLogs(knexInstance, newLog)
+      .then((log) => {
+        if (!log) {
+          logger.error("Log was not inserted into database");
+        }
+        logger.info(`Log succesffuly uploaded by user_id ${log.user_id}`);
+        res
+          .status(201)
+          .location(path.posix.join(req.originalUrl, `/${log.id}`))
+          .json(LogsService.sanitizeLogs(log));
+      })
+      .catch(next);
+  });
+
+//GET LOG by Id
+logsRouter
+  .route("/:logs_id")
+  .all(/*TODO requireAuth here */(req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { logs_id } = req.params;
+    LogsService.getLogsById(knexInstance, logs_id)
       .then((log) => {
         if (!log) {
           logger.error("log does not exist when after calling getLogsById");
@@ -37,7 +74,49 @@ logsRouter
       .catch(next);
   })
   .get((req, res, next) => {
-    res.json(res.log);
+    res.json(LogsService.sanitizeLogs(res.log));
+  })
+  //PATCH update/edit a log
+  .patch(/*TODO requireAuth here*/ jsonBodyParser, (req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { log_name, description, url, user_id, num_tags } = req.body;
+    const updatedLog = { log_name, description, url, user_id, num_tags };
+    const { logs_id } = req.params;
+    const numberOfReqBodyVal = Object.values(updatedLog).filter(Boolean).length;
+    if (numberOfReqBodyVal === 0) {
+      logger.error("Patch request needs at least one field");
+      return res.status(400).json({
+        error: {
+          message: `Request body must contain must not be empty`,
+        },
+      });
+    }
+    LogsService.updateLogs(knexInstance, logs_id, updatedLog)
+      .then((updatedRow) => {
+        if (!updatedRow) {
+          logger.error("Log was not updated");
+          return res.status(400).json({
+            error: { message: "Unable to update" },
+          });
+        }
+        logger.info(`Log succesfully updated with logs_id of ${logs_id}`);
+        res.status(204).end();
+      })
+      .catch(next);
+  })
+  //DELETE a log
+  .delete(/* requireAuth */ jsonBodyParser, (req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { user_id } = req.body;
+    const { logs_id } = req.params;
+    LogsService.deleteLogs(knexInstance, logs_id, user_id)
+      .then(() => {
+        logger.info(
+          `Log Succesfully deleted with log id ${logs_id} uploaded by user with id ${user_id}`
+        );
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = logsRouter;

@@ -73,15 +73,18 @@ usersRouter.post("/", jsonBodyParser, (req, res, next) => {
   }
 
   //EMAIL must be unique check
-  const emailError = UsersService.hasUserWithEmail(knexInstance, email);
-  if (emailError) {
-    logger.error(
-      `error: posting a user with this ${email} email already exists`
-    );
-    return res.status(400).json({
-      error: { message: `Email already taken` },
-    });
-  }
+  UsersService.hasUserWithEmail(knexInstance, email).then(
+    (hasUserWithEmail) => {
+      if (hasUserWithEmail) {
+        logger.error(
+          `error: posting a user with this ${email} email already exists`
+        );
+        return res.status(400).json({
+          error: { message: `Email already taken` },
+        });
+      }
+    }
+  );
 
   //USER_NAME must be unique check
   UsersService.hasUserWithUserName(knexInstance, user_name)
@@ -107,7 +110,7 @@ usersRouter.post("/", jsonBodyParser, (req, res, next) => {
         return UsersService.insertUser(knexInstance, newUser).then((user) => {
           res
             .status(201)
-            .location(path.posix.join(req.originalUrl, `/${user_id}`))
+            .location(path.posix.join(req.originalUrl, `/${user.id}`))
             .json(UsersService.sanitizeUser(user));
         });
       });

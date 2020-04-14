@@ -25,7 +25,7 @@ function makeLogsArray() {
       description: "some info about react",
       url: "https://reactjs.org/",
       num_tags: 1,
-      date_created: "2020-04-09T13:56:23.223Z",
+      date_created: new Date("2020-04-09T13:56:23.223Z"),
     },
     {
       id: 2,
@@ -33,7 +33,7 @@ function makeLogsArray() {
       description: "some info about Node",
       url: "https://nodejs.org/en//",
       num_tags: 1,
-      date_created: "2020-04-09T13:56:23.223Z",
+      date_created: new Date("2020-04-09T13:56:23.223Z"),
     },
     {
       id: 3,
@@ -41,7 +41,7 @@ function makeLogsArray() {
       description: "some info about express",
       url: "https://expressjs.com/",
       num_tags: 1,
-      date_created: "2020-04-09T13:56:23.223Z",
+      date_created: new Date("2020-04-09T13:56:23.223Z"),
     },
     {
       id: 4,
@@ -49,7 +49,7 @@ function makeLogsArray() {
       description: "some info about express getting started",
       url: "https://expressjs.com/en/starter/installing.html",
       num_tags: 2,
-      date_created: "2020-04-09T13:56:23.223Z",
+      date_created: new Date("2020-04-09T13:56:23.223Z"),
     },
     {
       id: 5,
@@ -57,7 +57,52 @@ function makeLogsArray() {
       description: "some info about react",
       url: "https://reactjs.org/",
       num_tags: 1,
-      date_created: "2020-04-09T13:56:23.223Z",
+      date_created: new Date("2020-04-09T13:56:23.223Z"),
+    },
+  ];
+}
+
+function makeExpectedLogsArray() {
+  return [
+    {
+      id: 1,
+      log_name: "React",
+      description: "some info about react",
+      url: "https://reactjs.org/",
+      num_tags: 1,
+      date_created: new Date("2020-04-09T13:56:23.223Z"), //.toLocaleString(),
+    },
+    {
+      id: 2,
+      log_name: "Node",
+      description: "some info about Node",
+      url: "https://nodejs.org/en//",
+      num_tags: 1,
+      date_created: new Date("2020-04-09T13:56:23.223Z"), //.toLocaleString(),
+    },
+    {
+      id: 3,
+      log_name: "Express",
+      description: "some info about express",
+      url: "https://expressjs.com/",
+      num_tags: 1,
+      date_created: new Date("2020-04-09T13:56:23.223Z"), //.toLocaleString(),
+    },
+    {
+      id: 4,
+      log_name: "Getting started with express",
+      description: "some info about express getting started",
+      url: "https://expressjs.com/en/starter/installing.html",
+      num_tags: 2,
+      date_created: new Date("2020-04-09T13:56:23.223Z"), //.toLocaleString(),
+    },
+    {
+      id: 5,
+      log_name: "React",
+      description: "some info about react",
+      url: "https://reactjs.org/",
+      num_tags: 1,
+      date_created: new Date("2020-04-09T13:56:23.223Z"), //.toLocaleString(),
     },
   ];
 }
@@ -65,6 +110,11 @@ function makeLogsArray() {
 function makeTestData() {
   const testLogs = makeLogsArray();
   return { testLogs };
+}
+
+function makeExpectedTestData() {
+  const expectedLogs = makeExpectedLogsArray();
+  return { expectedLogs };
 }
 
 function seedLogsTables(db, logs) {
@@ -77,6 +127,9 @@ module.exports = {
   makeKnexInstance,
   makeLogsArray,
   makeTestData,
+
+  makeExpectedLogsArray,
+  makeExpectedTestData,
 
   seedLogsTables,
 };

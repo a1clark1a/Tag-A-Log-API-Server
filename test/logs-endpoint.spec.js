@@ -5,6 +5,7 @@ const logger = require("../src/middleware/logger");
 describe("Logs Endpoints", () => {
   let db;
   const { testLogs } = helpers.makeTestData();
+  const { expectedLogs } = helpers.makeExpectedTestData();
 
   before("make knex instance", () => {
     db = helpers.makeKnexInstance();
@@ -34,7 +35,7 @@ describe("Logs Endpoints", () => {
       });
 
       it(`responds with 200 and a list of logs`, () => {
-        return supertest(app).get("/api/logs").expect(200, testLogs);
+        return supertest(app).get("/api/logs").expect(200, expectedLogs);
       });
     });
   });

@@ -8,6 +8,8 @@ const { NODE_ENV } = require("./config");
 const erroHandler = require("./middleware/error-handler");
 const logsRouter = require("./logs-router/logs-router");
 const tagsRouter = require("./tags-router/tags-router");
+const usersRouter = require("./users-router/users-router");
+const authRouter = require("./auth/auth-router");
 
 const app = express();
 
@@ -19,8 +21,8 @@ app.use(cors());
 
 app.use("/api/logs", logsRouter);
 app.use("/api/tags", tagsRouter);
-//TODO use usersRouter
-//TODO use authRouter
+app.use("/api/users", usersRouter);
+app.use("/api/auth", authRouter);
 
 app.use(erroHandler);
 

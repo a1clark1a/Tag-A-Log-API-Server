@@ -57,22 +57,24 @@ logsRouter
 //GET LOG by Id
 logsRouter
   .route("/:logs_id")
-  .all(/*TODO requireAuth here */(req, res, next) => {
-    const knexInstance = req.app.get("db");
-    const { logs_id } = req.params;
-    LogsService.getLogsById(knexInstance, logs_id)
-      .then((log) => {
-        if (!log) {
-          logger.error("log does not exist when after calling getLogsById");
-          return res.status(404).json({
-            error: { message: `Log does not exist` },
-          });
-        }
-        res.log = log;
-        next();
-      })
-      .catch(next);
-  })
+  .all(
+    /*TODO requireAuth here */ (req, res, next) => {
+      const knexInstance = req.app.get("db");
+      const { logs_id } = req.params;
+      LogsService.getLogsById(knexInstance, logs_id)
+        .then((log) => {
+          if (!log) {
+            logger.error("log does not exist when after calling getLogsById");
+            return res.status(404).json({
+              error: { message: `Log does not exist` },
+            });
+          }
+          res.log = log;
+          next();
+        })
+        .catch(next);
+    }
+  )
   .get((req, res, next) => {
     res.json(LogsService.sanitizeLogs(res.log));
   })

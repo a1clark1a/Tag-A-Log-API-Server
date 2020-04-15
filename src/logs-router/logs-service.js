@@ -1,22 +1,7 @@
 const xss = require("xss");
 
 const LogsService = {
-  getAllLogs(knex) {
-    return knex.from("logs").select("*").orderBy("date_created", "desc");
-  },
-
-  getAllLogsByUserId(knex, userId) {
-    return knex
-      .from("logs")
-      .select("*")
-      .where("user_id", userId)
-      .orderBy("date_created", "desc");
-  },
-
-  getLogsById(knex, logsId) {
-    return knex.from("logs").select("*").where("id", logsId).first();
-  },
-
+  //CREATE
   insertLogs(knex, newLogs) {
     return knex
       .insert(newLogs)
@@ -27,17 +12,39 @@ const LogsService = {
       });
   },
 
-  updateLogs(knex, logs_id, logsToUpdate) {
-    return knex.from("logs").where("id", logs_id).update(logsToUpdate);
+  //READ
+  getAllLogs(knex) {
+    return knex.from("logs").select("*").orderBy("date_created", "desc");
   },
 
-  deleteLogs(knex, logs_id, user_id) {
+  getAllLogsByUserId(knex, usersId) {
+    return knex
+      .from("logs")
+      .select("*")
+      .where("user_id", usersId)
+      .orderBy("date_created", "desc");
+  },
+
+  getLogsById(knex, logsId) {
+    return knex.from("logs").select("*").where("id", logsId).first();
+  },
+
+  //TODO GET TAGS ASSOCIATED BY LOG
+
+  //UPDATE
+  updateLogs(knex, logsId, logsToUpdate) {
+    return knex.from("logs").where("id", logsId).update(logsToUpdate);
+  },
+
+  //DELETE
+  deleteLogs(knex, logsId, usersId) {
     return knex("logs")
-      .where({ id: logs_id, user_id: user_id })
+      .where({ id: logsId, user_id: usersId })
       .first()
       .delete();
   },
 
+  //SANITIZE
   sanitizeLogs(logs) {
     return {
       id: logs.id,

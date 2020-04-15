@@ -3,10 +3,7 @@ const bcrypt = require("bcryptjs");
 const REGEX_UPPER_LOWER_NUMBER_SPECIAL = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/;
 
 const UsersService = {
-  getUserById(knex, userId) {
-    return knex.from("users").where("id", userId).first();
-  },
-
+  //CREATE
   insertUser(knex, newUser) {
     return knex
       .into("users")
@@ -15,6 +12,12 @@ const UsersService = {
       .then(([user]) => user);
   },
 
+  //READ
+  getUserById(knex, userId) {
+    return knex.from("users").where("id", userId).first();
+  },
+
+  //VALIDATE
   hasUserWithUserName(knex, user_name) {
     return knex("users")
       .where({ user_name })
@@ -50,6 +53,7 @@ const UsersService = {
     return bcrypt.hash(password, 12);
   },
 
+  //SANITIZE
   sanitizeUser(user) {
     return {
       id: user.id,

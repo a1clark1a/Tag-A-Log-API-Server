@@ -1,5 +1,3 @@
-const xss = require("xss");
-
 const LogsService = {
   //CREATE
   insertLogs(knex, newLogs) {
@@ -29,7 +27,13 @@ const LogsService = {
     return knex.from("logs").select("*").where("id", logsId).first();
   },
 
-  //TODO GET TAGS ASSOCIATED BY LOG
+  getTagsByLogsId(knex, logsId) {
+    return knex
+      .from("tags AS tag")
+      .select("*")
+      .leftJoin("log_tags AS lt", "tag.id", "lt.tag_id")
+      .where("log_id", logsId);
+  },
 
   //UPDATE
   updateLogs(knex, logsId, logsToUpdate) {
@@ -42,19 +46,6 @@ const LogsService = {
       .where({ id: logsId, user_id: usersId })
       .first()
       .delete();
-  },
-
-  //SANITIZE
-  sanitizeLogs(logs) {
-    return {
-      id: logs.id,
-      log_name: xss(logs.log_name),
-      description: xss(logs.description),
-      url: logs.url,
-      num_tags: Number(logs.num_tags) || 0,
-      date_created: new Date(logs.date_created).toLocaleString(),
-      user_id: logs.user_id,
-    };
   },
 };
 

@@ -1,5 +1,3 @@
-const xss = require("xss");
-
 const TagsService = {
   //CREATE
   insertTag(knex, newTag) {
@@ -17,15 +15,23 @@ const TagsService = {
     return knex.from("tags").select("*").orderBy("date_created", "desc");
   },
 
-  getTagsByTagName(knex, tagsName) {
-    return knex.from("tags").select("*").where({ tag_name: tagsName }).first();
+  getAllTagsByUserId(knex, usersId) {
+    return knex
+      .from("tags")
+      .select("*")
+      .where("user_id", usersId)
+      .orderBy("tag_name", "desc");
+  },
+
+  getTagByTagsId(knex, tagsId) {
+    return knex.from("tags").select("*").where("id", tagsId).first();
   },
 
   //TODO GET LOGS ASSOCIATED BY TAGS
 
   //UPDATE
   updateTag(knex, tagsId, tagsToUpdate) {
-    return knex.from("tags").where("id", tagsId).update(tagsToUpdate);
+    return knex.from("tags").where({ id: tagsId }).update(tagsToUpdate);
   },
 
   //DELETE
@@ -37,14 +43,13 @@ const TagsService = {
       .delete();
   },
 
-  //SANITIZE
-  sanitizeTags(tags) {
-    return {
-      id: tags.id,
-      tag_name: xss(tags.tag_name),
-      user_id: tags.user_id,
-      date_created: new Date(tags.date_created).toLocaleString(),
-    };
+  //HELPERS
+  hasDuplicateTagForUser(knex, tagsName, usersId) {
+    return knex
+      .from("tags")
+      .where({ tag_name: tagsName, user_id: usersId })
+      .first()
+      .then((user) => !!user);
   },
 };
 

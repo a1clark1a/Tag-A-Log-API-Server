@@ -6,6 +6,7 @@ const UsersService = require("./users-service");
 const LogsService = require("../logs-router/logs-service");
 const AuthService = require("../auth/auth-service");
 const { requireAuth } = require("../middleware/jwt-auth");
+const { sanitizeUser, sanitizeLogs } = require("../middleware/serviceHelper");
 
 const usersRouter = express.Router();
 const jsonBodyParser = express.json();
@@ -32,7 +33,7 @@ usersRouter
       .catch(next);
   })
   .get((req, res, next) => {
-    res.json(UsersService.sanitizeUser(res.users));
+    res.json(sanitizeUser(res.users));
   });
 
 //GET user created logs
@@ -43,7 +44,7 @@ usersRouter.route("/:user_id/logs").get((req, res, next) => {
   LogsService.getAllLogsByUserId(knexInstance, user_id)
     .then((logs) => {
       logger.info("logs retrieved using user_id");
-      res.json(logs.map(LogsService.sanitizeLogs));
+      res.json(logs.map(sanitizeLogs));
     })
     .catch(next);
 });
@@ -111,7 +112,7 @@ usersRouter.post("/", jsonBodyParser, (req, res, next) => {
           res
             .status(201)
             .location(path.posix.join(req.originalUrl, `/${user.id}`))
-            .json(UsersService.sanitizeUser(user));
+            .json(sanitizeUser(user));
         });
       });
     })

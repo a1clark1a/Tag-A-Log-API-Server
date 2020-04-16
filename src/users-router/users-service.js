@@ -1,4 +1,3 @@
-const xss = require("xss");
 const bcrypt = require("bcryptjs");
 const REGEX_UPPER_LOWER_NUMBER_SPECIAL = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/;
 
@@ -51,16 +50,6 @@ const UsersService = {
 
   hashPassword(password) {
     return bcrypt.hash(password, 12);
-  },
-
-  //SANITIZE
-  sanitizeUser(user) {
-    return {
-      id: user.id,
-      user_name: xss(user.user_name),
-      email: xss(user.email),
-      date_created: new Date(user.date_created).toLocaleString(),
-    };
   },
 };
 

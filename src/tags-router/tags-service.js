@@ -10,6 +10,16 @@ const TagsService = {
       });
   },
 
+  insertRelationLogTag(knex, logTag) {
+    return knex
+      .insert(logTag)
+      .into("log_tags")
+      .returning("*")
+      .then((rows) => {
+        return rows[0];
+      });
+  },
+
   //READ
   getAllTags(knex) {
     return knex.from("tags").select("*").orderBy("date_created", "desc");

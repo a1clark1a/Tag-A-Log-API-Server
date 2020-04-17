@@ -23,7 +23,7 @@ tagsRouter
   })
   //POST a tag
   .post(jsonBodyParser, (req, res, next) => {
-    const { tag_name } = req.body;
+    const { tag_name, log_id } = req.body;
     const user_id = req.user.id;
     const newTag = { tag_name, user_id };
     const knexInstance = req.app.get("db");
@@ -37,6 +37,15 @@ tagsRouter
           },
         });
       }
+    }
+
+    if (!log_id) {
+      logger.error(`Posting tag Missing log_id in request body`);
+      return res.status(400).json({
+        error: {
+          message: `Uploading a tag requires it to be associated with a log`,
+        },
+      });
     }
 
     //TAG_NAME MUST be UNIQUE PER USER_ID
@@ -56,6 +65,21 @@ tagsRouter
             logger.error(`Tag was not inserted into database`);
           }
           logger.info(`Tag succesffuly uploaded by user_id ${tag.user_id}`);
+          const logTag = { log_id, tag_id: tag.id };
+          TagsService.insertRelationLogTag(knexInstance, logTag).then(
+            (logTag) => {
+              if (!logTag) {
+                logger.error(
+                  `error: could not create relation between log_id and tag_id`
+                );
+                return res.status(400).json({
+                  error: {
+                    message: `Could not create log and tag relationship`,
+                  },
+                });
+              }
+            }
+          );
           res
             .status(201)
             .location(path.posix.join(req.originalUrl, `/${tag.id}`))

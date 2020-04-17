@@ -27,7 +27,13 @@ const TagsService = {
     return knex.from("tags").select("*").where("id", tagsId).first();
   },
 
-  //TODO GET LOGS ASSOCIATED BY TAGS
+  getLogsByTagsId(knex, tagsId, usersId) {
+    return knex
+      .from("logs AS log")
+      .select("*")
+      .leftJoin("log_tags AS lt", "log.id", "lt.log_id")
+      .where({ tag_id: tagsId, user_id: usersId });
+  },
 
   //UPDATE
   updateTag(knex, tagsId, tagsToUpdate) {

@@ -1,4 +1,5 @@
 const xss = require("xss");
+const Treeize = require("treeize");
 
 function sanitizeLogs(logs) {
   return {
@@ -13,11 +14,18 @@ function sanitizeLogs(logs) {
 }
 
 function sanitizeTags(tags) {
+  const tagsTree = new Treeize();
+  const tagsData = tagsTree.grow([tags]).getData()[0];
+
   return {
     id: tags.id,
     tag_name: xss(tags.tag_name),
     user_id: tags.user_id,
     date_created: new Date(tags.date_created).toLocaleString(),
+    log_tags:
+      {
+        log_id: tagsData.log_id,
+      } || {},
   };
 }
 

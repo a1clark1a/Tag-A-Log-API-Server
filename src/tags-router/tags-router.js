@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const logger = require("../middleware/logger");
 const { requireAuth } = require("../middleware/jwt-auth");
-const { sanitizeTags } = require("../middleware/serviceHelper");
+const { sanitizeTags, sanitizeLogs } = require("../middleware/serviceHelper");
 const TagsService = require("./tags-service");
 
 const tagsRouter = express.Router();
@@ -11,8 +11,8 @@ const jsonBodyParser = express.json();
 //GET ALL tags
 tagsRouter
   .route("/")
+  .all(requireAuth)
   .get((req, res, next) => {
-    //TODO would need to require authentication
     const knexInstance = req.app.get("db");
     TagsService.getAllTags(knexInstance)
       .then((tags) => {
@@ -22,8 +22,9 @@ tagsRouter
       .catch(next);
   })
   //POST a tag
-  .post(requireAuth, jsonBodyParser, (req, res, next) => {
-    const { tag_name, user_id } = req.body;
+  .post(jsonBodyParser, (req, res, next) => {
+    const { tag_name } = req.body;
+    const user_id = req.user.id;
     const newTag = { tag_name, user_id };
     const knexInstance = req.app.get("db");
 
@@ -58,7 +59,7 @@ tagsRouter
           res
             .status(201)
             .location(path.posix.join(req.originalUrl, `/${tag.id}`))
-            .json(TagsService.sanitizeTags(tag));
+            .json(sanitizeTags(tag));
         });
       })
       .catch(next);
@@ -67,7 +68,7 @@ tagsRouter
 //GET TAG by tag_name
 tagsRouter
   .route("/:tags_id")
-  //.all(requireAuth)
+  .all(requireAuth)
   .all(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
     const { tags_id } = req.params;
@@ -93,8 +94,9 @@ tagsRouter
   //UPDATE tag
   .patch(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { tag_name, user_id } = req.body;
+    const { tag_name } = req.body;
     const { tags_id } = req.params;
+    const user_id = req.user.id;
     const updatedTag = { tag_name, user_id };
 
     for (const [key, value] of Object.entries(updatedTag)) {
@@ -138,7 +140,7 @@ tagsRouter
   //DELETE a tag
   .delete(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { user_id } = req.body;
+    const user_id = req.user.id;
     const { tags_id } = req.params;
 
     TagsService.deleteTag(knexInstance, tags_id, user_id)
@@ -151,4 +153,25 @@ tagsRouter
       .catch(next);
   });
 
+tagsRouter
+  .route("/:tags_id/logs")
+  .all(requireAuth)
+  .get((req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { tags_id } = req.params;
+    const user_id = req.user.id;
+
+    TagsService.getLogsByTagsId(knexInstance, tags_id, user_id)
+      .then((logs) => {
+        console.log(logs);
+        if (!logs) {
+          logger.error("Logs does not exist after calling getLogsByTagsId");
+          return res.status(400).json({
+            error: { message: `Logs does not exist` },
+          });
+        }
+        res.json(logs.map(sanitizeLogs));
+      })
+      .catch(next);
+  });
 module.exports = tagsRouter;

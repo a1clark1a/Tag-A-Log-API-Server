@@ -24,7 +24,8 @@ logsRouter
   })
   //POST a log
   .post(jsonBodyParser, (req, res, next) => {
-    const { log_name, description, url, user_id, num_tags } = req.body;
+    const { log_name, description, url, num_tags } = req.body;
+    const user_id = req.user.id;
     const newLog = { log_name, description, user_id };
     const knexInstance = req.app.get("db");
 
@@ -49,7 +50,7 @@ logsRouter
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${log.id}`))
-          .json(LogsService.sanitizeLogs(log));
+          .json(sanitizeLogs(log));
       })
       .catch(next);
   });
@@ -62,6 +63,7 @@ logsRouter
     const { logs_id } = req.params;
     LogsService.getLogsById(knexInstance, logs_id)
       .then((log) => {
+        console.log(log);
         if (!log) {
           logger.error("log does not exist when after calling getLogsById");
           return res.status(404).json({
@@ -79,7 +81,8 @@ logsRouter
   //PATCH update/edit a log
   .patch(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { log_name, description, url, user_id, num_tags } = req.body;
+    const { log_name, description, url, num_tags } = req.body;
+    const user_id = req.user.id;
     const updatedLog = { log_name, description, url, user_id, num_tags };
     const { logs_id } = req.params;
     const numberOfReqBodyVal = Object.values(updatedLog).filter(Boolean).length;
@@ -107,7 +110,7 @@ logsRouter
   //DELETE a log
   .delete(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { user_id } = req.body;
+    const user_id = req.user.id;
     const { logs_id } = req.params;
     LogsService.deleteLogs(knexInstance, logs_id, user_id)
       .then(() => {
@@ -119,23 +122,27 @@ logsRouter
       .catch(next);
   });
 
-logsRouter.route("/:logs_id/tags").get((req, res, next) => {
-  const knexInstance = req.app.get("db");
-  const { logs_id } = req.params;
+//GET a logs list of tags
+logsRouter
+  .route("/:logs_id/tags")
+  .all(requireAuth)
+  .get((req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { logs_id } = req.params;
 
-  LogsService.getTagsByLogsId(knexInstance, logs_id)
-    .then((tags) => {
-      console.log(tags);
-      tags.map((i) => console.log(i.tag_id));
-      if (!tags) {
-        logger.error("Tag does not exist when after calling getTagsByLogsId");
-        return res.status(404).json({
-          error: { message: `Tag does not exist` },
-        });
-      }
-      res.json(tags.map(sanitizeTags));
-    })
-    .catch(next);
-});
+    LogsService.getTagsByLogsId(knexInstance, logs_id)
+      .then((tags) => {
+        console.log(tags);
+        tags.map((i) => console.log(i.tag_id));
+        if (!tags) {
+          logger.error("Tag does not exist when after calling getTagsByLogsId");
+          return res.status(400).json({
+            error: { message: `Tag does not exist` },
+          });
+        }
+        res.json(tags.map(sanitizeTags));
+      })
+      .catch(next);
+  });
 
 module.exports = logsRouter;

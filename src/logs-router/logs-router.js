@@ -40,7 +40,7 @@ logsRouter
       }
     }
     newLog.url = url;
-    newLog.num_tags = 0;
+    newLog.num_tags = num_tags;
     LogsService.insertLogs(knexInstance, newLog)
       .then((log) => {
         if (!log) {

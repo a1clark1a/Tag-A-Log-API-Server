@@ -197,26 +197,29 @@ tagsRouter
     const { tags_id } = req.params;
     const user_id = req.user.id;
 
-    TagsService.getTagByTagsId(knexInstance, tags_id, user_id).then((tag) => {
-      if (!tag) {
-        logger.error("Tag does not exist when after calling getTagsByTagName");
-        return res.status(404).json({
-          error: { message: `Tag does not exist` },
-        });
-      }
-    });
-
-    TagsService.getLogsByTagsId(knexInstance, tags_id, user_id)
-      .then((logs) => {
-        console.log(logs);
-        if (!logs) {
-          logger.error("Logs does not exist after calling getLogsByTagsId");
-          return res.status(400).json({
-            error: { message: `Logs does not exist` },
+    TagsService.getTagByTagsId(knexInstance, tags_id, user_id)
+      .then((tag) => {
+        if (!tag) {
+          logger.error(
+            "Tag does not exist when after calling getTagsByTagName"
+          );
+          return res.status(404).json({
+            error: { message: `Tag does not exist` },
           });
         }
-        res.json(logs.map(sanitizeLogs));
+        TagsService.getLogsByTagsId(knexInstance, tags_id, user_id).then(
+          (logs) => {
+            if (!logs) {
+              logger.error("Logs does not exist after calling getLogsByTagsId");
+              return res.status(400).json({
+                error: { message: `Logs does not exist` },
+              });
+            }
+            res.json(logs.map(sanitizeLogs));
+          }
+        );
       })
       .catch(next);
   });
+
 module.exports = tagsRouter;

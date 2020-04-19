@@ -138,24 +138,29 @@ logsRouter
     const { logs_id } = req.params;
     const user_id = req.user.id;
 
-    LogsService.getLogsById(knexInstance, logs_id, user_id).then((log) => {
-      if (!log) {
-        logger.error("log does not exist when after calling by logs_id");
-        return res.status(404).json({
-          error: { message: `Log does not exist` },
-        });
-      }
-    });
-    LogsService.getTagsByLogsId(knexInstance, logs_id, user_id)
-      .then((tags) => {
-        if (tags.length <= 0) {
-          logger.error("Tag does not exist when after calling getTagsByLogsId");
+    LogsService.getLogsById(knexInstance, logs_id, user_id)
+      .then((log) => {
+        if (!log) {
+          logger.error("log does not exist when after calling by logs_id");
           return res.status(404).json({
-            error: { message: `Tag does not exist` },
+            error: { message: `Log does not exist` },
           });
         }
-        res.json(tags.map(sanitizeTags));
+        LogsService.getTagsByLogsId(knexInstance, logs_id, user_id).then(
+          (tags) => {
+            if (tags.length <= 0) {
+              logger.error(
+                "Tag does not exist when after calling getTagsByLogsId"
+              );
+              return res.status(404).json({
+                error: { message: `Tag does not exist` },
+              });
+            }
+            res.json(tags.map(sanitizeTags));
+          }
+        );
       })
+
       .catch(next);
   });
 

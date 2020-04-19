@@ -243,4 +243,25 @@ describe(`Tags Endpoints`, function () {
       });
     });
   });
+
+  //TESTING GETTING LOGS TAGGED BY A TAG
+  describe(`GET /api/tags/:tags_id/logs`, () => {
+    context(`Given there are logs in the database but no tags`, () => {
+      beforeEach("insert logs", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs);
+      });
+
+      const validUser = testUsers[0];
+      const nonExistingTagId = 12;
+
+      it(`responds with a 404`, () => {
+        return supertest(app)
+          .get(`/api/tags/${nonExistingTagId}/logs`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .expect(404, {
+            error: { message: `Tag does not exist` },
+          });
+      });
+    });
+  });
 });

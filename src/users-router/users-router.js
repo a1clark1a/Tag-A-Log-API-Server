@@ -77,9 +77,7 @@ usersRouter.post("/", jsonBodyParser, (req, res, next) => {
   UsersService.hasUserWithEmail(knexInstance, email).then(
     (hasUserWithEmail) => {
       if (hasUserWithEmail) {
-        logger.error(
-          `error: posting a user with this ${email} email already exists`
-        );
+        logger.error(`posting a user with this ${email} email already exists`);
         return res.status(400).json({
           error: { message: `Email already taken` },
         });
@@ -92,7 +90,7 @@ usersRouter.post("/", jsonBodyParser, (req, res, next) => {
     .then((hasUserWIthUserName) => {
       if (hasUserWIthUserName) {
         logger.error(
-          `error: posting a user with this ${user_name} user_name that already exist`
+          `posting a user with this ${user_name} user_name that already exist`
         );
         return res.status(400).json({
           error: { message: `Username already taken` },

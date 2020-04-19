@@ -14,7 +14,8 @@ tagsRouter
   .all(requireAuth)
   .get((req, res, next) => {
     const knexInstance = req.app.get("db");
-    TagsService.getAllTags(knexInstance)
+    const user_id = req.user.id;
+    TagsService.getAllTagsByUserId(knexInstance, user_id)
       .then((tags) => {
         logger.info("all tags requested");
         res.json(tags.map(sanitizeTags));
@@ -29,7 +30,7 @@ tagsRouter
     const knexInstance = req.app.get("db");
 
     for (const [key, value] of Object.entries(newTag)) {
-      if (value == null) {
+      if (value == null || value == "") {
         logger.error(`Posting tag Missing ${key} in request body`);
         return res.status(400).json({
           error: {
@@ -53,7 +54,7 @@ tagsRouter
       .then((hasDuplicate) => {
         if (hasDuplicate) {
           logger.error(
-            `error: posting a tag with this ${tag_name} user_name that already exist for user ${user_id}`
+            `posting a tag with this ${tag_name} user_name that already exist for user ${user_id}`
           );
           return res.status(400).json({
             error: { message: `Tag name already exists` },
@@ -70,7 +71,7 @@ tagsRouter
             (logTag) => {
               if (!logTag) {
                 logger.error(
-                  `error: could not create relation between log_id and tag_id`
+                  `could not create relation between log_id and tag_id`
                 );
                 return res.status(400).json({
                   error: {
@@ -89,15 +90,16 @@ tagsRouter
       .catch(next);
   });
 
-//GET TAG by tag_name
+//GET a single tag
 tagsRouter
   .route("/:tags_id")
   .all(requireAuth)
   .all(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
     const { tags_id } = req.params;
+    const user_id = req.user.id;
 
-    TagsService.getTagByTagsId(knexInstance, tags_id)
+    TagsService.getTagByTagsId(knexInstance, tags_id, user_id)
       .then((tag) => {
         if (!tag) {
           logger.error(
@@ -118,13 +120,13 @@ tagsRouter
   //UPDATE tag
   .patch(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { tag_name } = req.body;
+    const { tag_name, log_id } = req.body;
     const { tags_id } = req.params;
     const user_id = req.user.id;
     const updatedTag = { tag_name, user_id };
 
     for (const [key, value] of Object.entries(updatedTag)) {
-      if (value == null) {
+      if (value == null || value == "") {
         logger.error(`Updating tag Missing ${key} in request body`);
         return res.status(400).json({
           error: {
@@ -132,6 +134,15 @@ tagsRouter
           },
         });
       }
+    }
+
+    if (!log_id) {
+      logger.error(`Posting tag Missing log_id in request body`);
+      return res.status(400).json({
+        error: {
+          message: `Uploading a tag requires it to be associated with a log`,
+        },
+      });
     }
 
     //TAG_NAME MUST be UNIQUE PER USER_ID
@@ -177,6 +188,7 @@ tagsRouter
       .catch(next);
   });
 
+//GET a tags list of logs
 tagsRouter
   .route("/:tags_id/logs")
   .all(requireAuth)
@@ -184,6 +196,15 @@ tagsRouter
     const knexInstance = req.app.get("db");
     const { tags_id } = req.params;
     const user_id = req.user.id;
+
+    TagsService.getTagByTagsId(knexInstance, tags_id, user_id).then((tag) => {
+      if (!tag) {
+        logger.error("Tag does not exist when after calling getTagsByTagName");
+        return res.status(404).json({
+          error: { message: `Tag does not exist` },
+        });
+      }
+    });
 
     TagsService.getLogsByTagsId(knexInstance, tags_id, user_id)
       .then((logs) => {

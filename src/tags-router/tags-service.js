@@ -26,15 +26,15 @@ const TagsService = {
   },
 
   getAllTagsByUserId(knex, usersId) {
+    return knex.from("tags").select("*").where("user_id", usersId);
+  },
+
+  getTagByTagsId(knex, tagsId, usersId) {
     return knex
       .from("tags")
       .select("*")
-      .where("user_id", usersId)
-      .orderBy("tag_name", "desc");
-  },
-
-  getTagByTagsId(knex, tagsId) {
-    return knex.from("tags").select("*").where("id", tagsId).first();
+      .where({ id: tagsId, user_id: usersId })
+      .first();
   },
 
   getLogsByTagsId(knex, tagsId, usersId) {

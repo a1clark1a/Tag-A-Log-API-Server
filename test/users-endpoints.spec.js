@@ -17,9 +17,9 @@ describe("Users Endpoints", function () {
 
   after("disconnect from db", () => db.destroy());
 
-  before("clean the tables", () => helpers.cleanTables());
+  before("clean the tables", () => helpers.cleanTables(db));
 
-  beforeEach("clean the tables", () => helpers.cleanTables());
+  beforeEach("clean the tables", () => helpers.cleanTables(db));
 
   //TODO GET user_name test
   describe(`GET /api/users/:user_name`, () => {});

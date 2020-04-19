@@ -16,23 +16,23 @@ const LogsService = {
   },
 
   getAllLogsByUserId(knex, usersId) {
+    return knex.from("logs").select("*").where("user_id", usersId);
+  },
+
+  getLogsById(knex, logsId, usersId) {
     return knex
       .from("logs")
       .select("*")
-      .where("user_id", usersId)
-      .orderBy("date_created", "desc");
+      .where({ id: logsId, user_id: usersId })
+      .first();
   },
 
-  getLogsById(knex, logsId) {
-    return knex.from("logs").select("*").where("id", logsId).first();
-  },
-
-  getTagsByLogsId(knex, logsId) {
+  getTagsByLogsId(knex, logsId, usersId) {
     return knex
       .from("tags AS tag")
       .select("*")
       .leftJoin("log_tags AS lt", "tag.id", "lt.tag_id")
-      .where("log_id", logsId);
+      .where({ log_id: logsId, "tag.user_id": usersId });
   },
 
   //UPDATE

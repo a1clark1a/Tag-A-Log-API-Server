@@ -15,7 +15,8 @@ logsRouter
   .all(requireAuth)
   .get((req, res, next) => {
     const knexInstance = req.app.get("db");
-    LogsService.getAllLogs(knexInstance)
+    const user_id = req.user.id;
+    LogsService.getAllLogsByUserId(knexInstance, user_id)
       .then((logs) => {
         logger.info(`all logs requested`);
         res.json(logs.map(sanitizeLogs));
@@ -60,12 +61,13 @@ logsRouter
   .route("/:logs_id")
   .all(requireAuth, (req, res, next) => {
     const knexInstance = req.app.get("db");
+    const user_id = req.user.id;
     const { logs_id } = req.params;
-    LogsService.getLogsById(knexInstance, logs_id)
+
+    LogsService.getLogsById(knexInstance, logs_id, user_id)
       .then((log) => {
-        console.log(log);
         if (!log) {
-          logger.error("log does not exist when after calling getLogsById");
+          logger.error("log does not exist when after calling by logs_id");
           return res.status(404).json({
             error: { message: `Log does not exist` },
           });
@@ -83,17 +85,22 @@ logsRouter
     const knexInstance = req.app.get("db");
     const { log_name, description, url, num_tags } = req.body;
     const user_id = req.user.id;
-    const updatedLog = { log_name, description, url, user_id, num_tags };
+    const updatedLog = { log_name, description, url };
     const { logs_id } = req.params;
+
     const numberOfReqBodyVal = Object.values(updatedLog).filter(Boolean).length;
     if (numberOfReqBodyVal === 0) {
       logger.error("Patch request needs at least one field");
       return res.status(400).json({
         error: {
-          message: `Request body must contain must not be empty`,
+          message: `Request body must not be empty`,
         },
       });
     }
+
+    updatedLog.user_id = user_id;
+    updatedLog.num_tags = num_tags;
+
     LogsService.updateLogs(knexInstance, logs_id, updatedLog)
       .then((updatedRow) => {
         if (!updatedRow) {
@@ -129,14 +136,21 @@ logsRouter
   .get((req, res, next) => {
     const knexInstance = req.app.get("db");
     const { logs_id } = req.params;
+    const user_id = req.user.id;
 
-    LogsService.getTagsByLogsId(knexInstance, logs_id)
+    LogsService.getLogsById(knexInstance, logs_id, user_id).then((log) => {
+      if (!log) {
+        logger.error("log does not exist when after calling by logs_id");
+        return res.status(404).json({
+          error: { message: `Log does not exist` },
+        });
+      }
+    });
+    LogsService.getTagsByLogsId(knexInstance, logs_id, user_id)
       .then((tags) => {
-        console.log(tags);
-        tags.map((i) => console.log(i.tag_id));
-        if (!tags) {
+        if (tags.length <= 0) {
           logger.error("Tag does not exist when after calling getTagsByLogsId");
-          return res.status(400).json({
+          return res.status(404).json({
             error: { message: `Tag does not exist` },
           });
         }

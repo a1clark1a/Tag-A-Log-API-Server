@@ -14,7 +14,8 @@ function cleanTables(db) {
     `TRUNCATE
         logs,
         users,
-        tags
+        tags,
+        log_tags
         RESTART IDENTITY CASCADE`
   );
 }
@@ -82,6 +83,15 @@ function makeLogsArray(users) {
       url: "https://expressjs.com/",
       num_tags: 1,
       date_created: new Date("2020-04-09T13:56:23.223Z"),
+      user_id: users[0].id,
+    },
+    {
+      id: 8,
+      log_name: "Log with no tag",
+      description: "some info about this log",
+      url: "https://expressjs.com/",
+      num_tags: 0,
+      date_created: new Date("2029-04-09T13:56:23.223Z"),
       user_id: users[0].id,
     },
   ];
@@ -173,42 +183,42 @@ function makeLog_Tags() {
     {
       log_id: 1,
       tag_id: 1,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 2,
       tag_id: 2,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 3,
       tag_id: 7,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 4,
       tag_id: 6,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 4,
       tag_id: 8,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 5,
       tag_id: 3,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 6,
       tag_id: 5,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
     {
       log_id: 7,
       tag_id: 4,
-      date_created: new Date("2029-01-22T16:28:32.615Z"),
+      date_tagged: new Date("2029-01-22T16:28:32.615Z"),
     },
   ];
 }
@@ -277,6 +287,76 @@ function makeExpectedLogsArray(users) {
       num_tags: 1,
       date_created: new Date("2020-04-09T13:56:23.223Z").toLocaleString(),
       user_id: users[0].id,
+    },
+    {
+      id: 8,
+      log_name: "Log with no tag",
+      description: "some info about this log",
+      url: "https://expressjs.com/",
+      num_tags: 0,
+      date_created: new Date("2029-04-09T13:56:23.223Z").toLocaleString(),
+      user_id: users[0].id,
+    },
+  ];
+}
+
+function makeExpectedTagsArray(users) {
+  return [
+    {
+      id: 1,
+      tag_name: "react",
+      user_id: users[0].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 2,
+      tag_name: "node",
+      user_id: users[1].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 3,
+      tag_name: "react",
+      user_id: users[1].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 4,
+      tag_name: "node",
+      user_id: users[0].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 5,
+      tag_name: "react",
+      user_id: users[2].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 6,
+      tag_name: "express",
+      user_id: users[0].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 7,
+      tag_name: "express",
+      user_id: users[1].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
+    },
+    {
+      id: 8,
+      tag_name: "getting-started",
+      user_id: users[0].id,
+      date_created: new Date("2029-01-22T16:28:32.615Z").toLocaleString(),
+      log_tags: {},
     },
   ];
 }
@@ -347,13 +427,15 @@ function makeTestData() {
   const testUsers = makeUsersArray();
   const testLogs = makeLogsArray(testUsers);
   const testTags = makeTagsArray(testUsers);
-  return { testLogs, testUsers, testTags };
+  const testLogTags = makeLog_Tags();
+  return { testLogs, testUsers, testTags, testLogTags };
 }
 
 function makeExpectedTestData() {
   const expectedUsers = makeExpectedUsersArray();
   const expectedLogs = makeExpectedLogsArray(expectedUsers);
-  return { expectedLogs, expectedUsers };
+  const expectedTags = makeExpectedTagsArray(expectedUsers);
+  return { expectedLogs, expectedUsers, expectedTags };
 }
 
 function seedUsers(db, users) {
@@ -408,12 +490,14 @@ module.exports = {
   makeLogsArray,
   makeTagsArray,
   makeUsersArray,
+  makeLog_Tags,
   makeTestData,
 
   makeMaliciousLog,
 
   makeExpectedLogsArray,
   makeExpectedUsersArray,
+  makeExpectedTagsArray,
   makeExpectedTestData,
 
   seedLogsTables,

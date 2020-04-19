@@ -43,13 +43,20 @@ describe("Logs Endpoints", () => {
         return helpers.seedLogsTables(db, testUsers, testLogs);
       });
 
-      it(`responds with 200 and a list of logs`, () => {
-        const validUser = testUsers[0];
+      const validUser = testUsers[0];
+      const usersLogs = [];
 
+      expectedLogs.forEach((log) => {
+        if (log.user_id === validUser.id) {
+          usersLogs.push(log);
+        }
+      });
+
+      it(`responds with 200 and a list of logs`, () => {
         return supertest(app)
           .get("/api/logs")
           .set("Authorization", helpers.makeAuthHeader(validUser))
-          .expect(200, expectedLogs);
+          .expect(200, usersLogs);
       });
     });
 
@@ -84,15 +91,33 @@ describe("Logs Endpoints", () => {
         return helpers.seedUsers(db, testUsers);
       });
 
-      it(`responds with 404`, () => {
-        const validUser = testUsers[0];
-        const nonExistingId = 1234;
-        return supertest(app)
-          .get(`/api/logs/${nonExistingId}`)
-          .set("Authorization", helpers.makeAuthHeader(validUser))
-          .expect(404, {
-            error: { message: `Log does not exist` },
-          });
+      const methods = [
+        {
+          method: supertest(app).get,
+        },
+        {
+          method: supertest(app).post,
+        },
+        {
+          method: supertest(app).patch,
+        },
+        {
+          method: supertest(app).delete,
+        },
+      ];
+
+      const validUser = testUsers[0];
+      const nonExistingId = 1;
+
+      methods.forEach((request) => {
+        it(`responds with 404`, () => {
+          return request
+            .method(`/api/logs/${nonExistingId}`)
+            .set("Authorization", helpers.makeAuthHeader(validUser))
+            .expect(404, {
+              error: { message: `Log does not exist` },
+            });
+        });
       });
     });
 
@@ -101,11 +126,11 @@ describe("Logs Endpoints", () => {
         return helpers.seedLogsTables(db, testUsers, testLogs);
       });
 
-      it(`responds with 200 and the specified log`, () => {
-        const validUser = testUsers[0];
-        const logId = 1;
-        const expectedLog = expectedLogs[logId - 1];
+      const validUser = testUsers[0];
+      const logId = 1;
+      const expectedLog = expectedLogs[logId - 1];
 
+      it(`responds with 200 and the specified log`, () => {
         return supertest(app)
           .get(`/api/logs/${logId}`)
           .set("Authorization", helpers.makeAuthHeader(validUser))
@@ -160,7 +185,7 @@ describe("Logs Endpoints", () => {
         num_tags: 1,
       };
 
-      it(`responds with 200 and the uploaded log with correct credentials`, () => {
+      it(`responds with 201 and the uploaded log`, () => {
         return supertest(app)
           .post("/api/logs")
           .set("Authorization", helpers.makeAuthHeader(validUser))
@@ -174,6 +199,117 @@ describe("Logs Endpoints", () => {
             expect(res.body.url).to.eql(uploadBody.url);
             expect(res.body.user_id).to.eql(uploadBody.user_id);
             expect(res.body.num_tags).to.eql(uploadBody.num_tags || 0);
+          });
+      });
+    });
+  });
+
+  //TESTING FOR EDITING A LOG
+  describe(`PATCH /api/logs/:logs_id`, () => {
+    context(`Given no values`, () => {
+      beforeEach("insert logs", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs);
+      });
+
+      const validUser = testUsers[0];
+      const logsId = testLogs[0].id;
+
+      it(`responds with 400 required error when request body is empty`, () => {
+        const emptyLog = {};
+        return supertest(app)
+          .patch(`/api/logs/${logsId}`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .send(emptyLog)
+          .expect(400, {
+            error: { message: `Request body must not be empty` },
+          });
+      });
+    });
+
+    context(`Given there are logs in the database`, () => {
+      beforeEach("insert logs", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs);
+      });
+
+      const validUser = testUsers[0];
+      const logsId = testLogs[0].id;
+
+      const updatedLog = {
+        id: logsId,
+        user_id: validUser.id,
+        log_name: "new name for log",
+        description: "new description",
+        num_tags: 2,
+        url: "https://acperfecto.now.sh",
+      };
+
+      it(`responds with 204 and updated log`, () => {
+        return supertest(app)
+          .patch(`/api/logs/${logsId}`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .send(updatedLog)
+          .expect(204);
+      });
+    });
+  });
+
+  //TESTING DELETING A LOG
+  describe(`DELETE /api/logs/:logs_id`, () => {
+    context(`Given there are logs in the database`, () => {
+      beforeEach("insert logs", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs);
+      });
+
+      const validUser = testUsers[0];
+      const logsId = testLogs[0].id;
+
+      it(`responds with a 204 and deletes the log`, () => {
+        return supertest(app)
+          .delete(`/api/logs/${logsId}`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .expect(204);
+      });
+    });
+  });
+
+  //TESTING GETTING TAGS ATTACHED TO LOG
+  describe(`GET /api/logs/:logs_id/tags`, () => {
+    context(`Given there are logs in the database but no tags`, () => {
+      beforeEach("insert logs", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs);
+      });
+
+      const validUser = testUsers[0];
+      const logWithNoTag = 8;
+
+      it(`responds with a 404`, () => {
+        return supertest(app)
+          .get(`/api/logs/${logWithNoTag}/tags`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .expect(404, {
+            error: { message: `Tag does not exist` },
+          });
+      });
+    });
+
+    context(`Given there are logs and tags in the database`, () => {
+      const testTags = helpers.makeTagsArray(testUsers);
+      beforeEach("insert logs and tags", () => {
+        return helpers.seedLogsTables(db, testUsers, testLogs, testTags);
+      });
+
+      const validUser = testUsers[0];
+      const logsId = 4;
+
+      it(`responds with a 200 and a list of tags of the log ${logsId}`, () => {
+        return supertest(app)
+          .get(`/api/logs/${logsId}/tags`)
+          .set("Authorization", helpers.makeAuthHeader(validUser))
+          .expect(200)
+          .expect((res) => {
+            expect(res.body[0]).to.have.property("log_tags");
+            expect(res.body[0].log_tags.log_id).to.eql(logsId);
+            expect(res.body[0].user_id).to.eql(validUser.id);
           });
       });
     });

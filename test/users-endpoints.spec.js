@@ -2,7 +2,7 @@ const app = require("../src/app");
 const helpers = require("./test-helpers");
 const logger = require("../src/middleware/logger");
 
-describe.only("Users Endpoints", function () {
+describe("Users Endpoints", function () {
   let db;
   const { testUsers, testLogs, testTags } = helpers.makeTestData();
   const { expectedLogs } = helpers.makeExpectedTestData();
@@ -44,7 +44,7 @@ describe.only("Users Endpoints", function () {
     });
   });
 
-  //TODO GET user created logs test
+  //GET user created logs test
   describe(`GET /api/users/logs`, () => {
     context(`User is logged in with no logs`, () => {
       beforeEach("insert users", () => {
@@ -107,7 +107,6 @@ describe.only("Users Endpoints", function () {
       });
     });
 
-    //TODO create test user and test
     context("User creation", () => {
       const newUser = {
         user_name: "test-user_name",

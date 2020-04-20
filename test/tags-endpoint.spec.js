@@ -59,7 +59,6 @@ describe(`Tags Endpoints`, function () {
       });
     });
   });
-  //TODO TEST FOR XSS ATTACK
 
   //TESTING FOR A SPECIFIC TAG
   describe(`GET /api/tags/:tags_id`, () => {

@@ -34,11 +34,6 @@ describe(`Protected Endpoints`, () => {
       path: `/api/users/`,
       method: supertest(app).get,
     },
-    {
-      name: "GET /api/users/logs",
-      path: `/api/users/logs`,
-      method: supertest(app).get,
-    },
     //LOGS
     {
       name: "Post /api/logs",

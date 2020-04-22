@@ -29,22 +29,6 @@ usersRouter.route("/").get(requireAuth, (req, res, next) => {
     .catch(next);
 });
 
-//GET user created logs
-usersRouter
-  .route("/logs")
-  .all(requireAuth)
-  .get((req, res, next) => {
-    const knexInstance = req.app.get("db");
-    const user_id = req.user.id;
-
-    LogsService.getAllLogsByUserId(knexInstance, user_id)
-      .then((logs) => {
-        logger.info("logs retrieved using user_id");
-        res.json(logs.map(sanitizeLogs));
-      })
-      .catch(next);
-  });
-
 // POST USER  - create a new user
 usersRouter.post("/", jsonBodyParser, (req, res, next) => {
   const knexInstance = req.app.get("db");

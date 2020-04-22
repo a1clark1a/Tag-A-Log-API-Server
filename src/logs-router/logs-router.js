@@ -31,7 +31,7 @@ logsRouter
     const knexInstance = req.app.get("db");
 
     for (const [key, value] of Object.entries(newLog)) {
-      if (value == null) {
+      if (value == null || value == "") {
         logger.error(`Posting log Missing ${key} in request body`);
         return res.status(400).json({
           error: {

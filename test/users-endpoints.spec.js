@@ -44,42 +44,6 @@ describe("Users Endpoints", function () {
     });
   });
 
-  //GET user created logs test
-  describe(`GET /api/users/logs`, () => {
-    context(`User is logged in with no logs`, () => {
-      beforeEach("insert users", () => {
-        return helpers.seedUsers(db, testUsers);
-      });
-
-      it(`responds with 200 and an empty list`, () => {
-        return supertest(app)
-          .get("/api/users/logs")
-          .set("Authorization", helpers.makeAuthHeader(validUser))
-          .expect(200, []);
-      });
-    });
-
-    context(`User is logged in with logs`, () => {
-      beforeEach("insert users and logs", () => {
-        return helpers.seedLogsTables(db, testUsers, testLogs);
-      });
-
-      const userlogs = [];
-      expectedLogs.forEach((log) => {
-        if (log.user_id === validUser.id) {
-          userlogs.push(log);
-        }
-      });
-
-      it(`responds with 200 and a list of logs`, () => {
-        return supertest(app)
-          .get("/api/users/logs")
-          .set("Authorization", helpers.makeAuthHeader(validUser))
-          .expect(200, userlogs);
-      });
-    });
-  });
-
   //TESTING REGISTRATION VALIDATION AND CREATION
   describe(`POST /api/users`, () => {
     //MISSING FIELD IN REQUEST BODY WHEN REGISTERING TEST

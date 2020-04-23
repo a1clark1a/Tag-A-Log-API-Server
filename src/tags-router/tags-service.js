@@ -45,6 +45,14 @@ const TagsService = {
       .where({ tag_id: tagsId, user_id: usersId });
   },
 
+  getLogTagsRelation(knex, logsId, tagsId) {
+    return knex
+      .from("log_tags")
+      .select("*")
+      .where({ log_id: logsId, tag_id: tagsId })
+      .first();
+  },
+
   //UPDATE
   updateTag(knex, tagsId, tagsToUpdate) {
     return knex.from("tags").where({ id: tagsId }).update(tagsToUpdate);
@@ -65,7 +73,7 @@ const TagsService = {
       .from("tags")
       .where({ tag_name: tagsName, user_id: usersId })
       .first()
-      .then((user) => !!user);
+      .then((tag) => !!tag);
   },
 };
 

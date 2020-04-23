@@ -286,9 +286,7 @@ describe("Logs Endpoints", () => {
         return supertest(app)
           .get(`/api/logs/${logWithNoTag}/tags`)
           .set("Authorization", helpers.makeAuthHeader(validUser))
-          .expect(404, {
-            error: { message: `Tag does not exist` },
-          });
+          .expect(200, []);
       });
     });
 

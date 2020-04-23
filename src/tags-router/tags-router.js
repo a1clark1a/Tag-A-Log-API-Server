@@ -102,9 +102,7 @@ tagsRouter
     TagsService.getTagByTagsId(knexInstance, tags_id, user_id)
       .then((tag) => {
         if (!tag) {
-          logger.error(
-            "Tag does not exist when after calling getTagsByTagName"
-          );
+          logger.error("Tag does not exist after calling getTagsByTagName");
           return res.status(404).json({
             error: { message: `Tag does not exist` },
           });
@@ -157,18 +155,39 @@ tagsRouter
           });
         }
 
-        TagsService.updateTag(knexInstance, tags_id, updatedTag).then(
-          (updatedRows) => {
+        TagsService.updateTag(knexInstance, tags_id, updatedTag)
+          .then((updatedRows) => {
             if (!updatedRows) {
               logger.error("Tag was not updated");
               return res.status(400).json({
                 error: { message: "Unable to update" },
               });
             }
+            TagsService.getLogTagsRelation(knexInstance, log_id, tags_id).then(
+              (logTag) => {
+                if (!logTag) {
+                  const logTag = { log_id, tag_id: tags_id };
+                  TagsService.insertRelationLogTag(knexInstance, logTag)
+                    .then((logTag) => {
+                      if (!logTag) {
+                        logger.error(
+                          `could not create relation between log_id and tag_id`
+                        );
+                        return res.status(400).json({
+                          error: {
+                            message: `Could not create log and tag relationship`,
+                          },
+                        });
+                      }
+                    })
+                    .catch(next);
+                }
+              }
+            );
             logger.info(`Tag succesfully updated with tag_name of ${tag_name}`);
             res.status(204).end();
-          }
-        );
+          })
+          .catch(next);
       })
       .catch(next);
   })

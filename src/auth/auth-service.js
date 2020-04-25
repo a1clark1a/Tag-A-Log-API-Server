@@ -3,18 +3,24 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 
 const AuthService = {
-  getUserWithUserName(knex, user_name) {
-    return knex("users").where({ user_name }).first();
-  },
-  comparePassword(password, hash) {
-    return bcrypt.compare(password, hash);
-  },
+  //CREATE
   createJwt(subject, payload) {
     return jwt.sign(payload, config.JWT_SECRET, {
       subject,
       algorithm: "HS256",
     });
   },
+
+  //READ
+  getUserWithUserName(knex, user_name) {
+    return knex("users").where({ user_name }).first();
+  },
+
+  //VALIDATE
+  comparePassword(password, hash) {
+    return bcrypt.compare(password, hash);
+  },
+
   verifyJwt(token) {
     return jwt.verify(token, config.JWT_SECRET, {
       algorithms: ["HS256"],

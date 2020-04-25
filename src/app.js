@@ -10,6 +10,7 @@ const logsRouter = require("./logs-router/logs-router");
 const tagsRouter = require("./tags-router/tags-router");
 const usersRouter = require("./users-router/users-router");
 const authRouter = require("./auth/auth-router");
+const relationsRouter = require("./logTag-relation-router/relation-router");
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api/logs", logsRouter);
 app.use("/api/tags", tagsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/relations", relationsRouter);
 
 app.use(erroHandler);
 

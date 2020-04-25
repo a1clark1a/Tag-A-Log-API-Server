@@ -17,7 +17,6 @@ function requireAuth(req, res, next) {
 
   try {
     const payload = AuthService.verifyJwt(bearerToken);
-
     AuthService.getUserWithUserName(knexInstance, payload.sub)
       .then((user) => {
         if (!user) {

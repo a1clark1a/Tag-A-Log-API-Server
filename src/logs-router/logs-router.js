@@ -3,6 +3,7 @@ const path = require("path");
 
 const logger = require("../middleware/logger");
 const { requireAuth } = require("../middleware/jwt-auth");
+const { sanitizeLogs, sanitizeTags } = require("../middleware/serviceHelper");
 const LogsService = require("./logs-service");
 
 const logsRouter = express.Router();
@@ -11,25 +12,26 @@ const jsonBodyParser = express.json();
 //GET ALL logs
 logsRouter
   .route("/")
-  .get(
-    /*TODO requireAuth here */ (req, res, next) => {
-      const knexInstance = req.app.get("db");
-      LogsService.getAllLogs(knexInstance)
-        .then((logs) => {
-          logger.info(`all logs requested`);
-          res.json(logs.map(LogsService.sanitizeLogs));
-        })
-        .catch(next);
-    }
-  )
+  .all(requireAuth)
+  .get((req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const user_id = req.user.id;
+    LogsService.getAllLogsByUserId(knexInstance, user_id)
+      .then((logs) => {
+        logger.info(`all logs requested`);
+        res.json(logs.map(sanitizeLogs));
+      })
+      .catch(next);
+  })
   //POST a log
-  .post(/*TODO requireAUth here */ jsonBodyParser, (req, res, next) => {
-    const { log_name, description, url, user_id, num_tags } = req.body;
+  .post(jsonBodyParser, (req, res, next) => {
+    const { log_name, description, url, num_tags } = req.body;
+    const user_id = req.user.id;
     const newLog = { log_name, description, user_id };
     const knexInstance = req.app.get("db");
 
     for (const [key, value] of Object.entries(newLog)) {
-      if (value == null) {
+      if (value == null || value == "") {
         logger.error(`Posting log Missing ${key} in request body`);
         return res.status(400).json({
           error: {
@@ -39,7 +41,7 @@ logsRouter
       }
     }
     newLog.url = url;
-    newLog.num_tags = 0;
+    newLog.num_tags = num_tags;
     LogsService.insertLogs(knexInstance, newLog)
       .then((log) => {
         if (!log) {
@@ -49,7 +51,7 @@ logsRouter
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${log.id}`))
-          .json(LogsService.sanitizeLogs(log));
+          .json(sanitizeLogs(log));
       })
       .catch(next);
   });
@@ -57,13 +59,15 @@ logsRouter
 //GET LOG by Id
 logsRouter
   .route("/:logs_id")
-  .all(/*TODO requireAuth here */(req, res, next) => {
+  .all(requireAuth, (req, res, next) => {
     const knexInstance = req.app.get("db");
+    const user_id = req.user.id;
     const { logs_id } = req.params;
-    LogsService.getLogsById(knexInstance, logs_id)
+
+    LogsService.getLogsById(knexInstance, logs_id, user_id)
       .then((log) => {
         if (!log) {
-          logger.error("log does not exist when after calling getLogsById");
+          logger.error("log does not exist when after calling by logs_id");
           return res.status(404).json({
             error: { message: `Log does not exist` },
           });
@@ -74,23 +78,29 @@ logsRouter
       .catch(next);
   })
   .get((req, res, next) => {
-    res.json(LogsService.sanitizeLogs(res.log));
+    res.json(sanitizeLogs(res.log));
   })
   //PATCH update/edit a log
-  .patch(/*TODO requireAuth here*/ jsonBodyParser, (req, res, next) => {
+  .patch(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { log_name, description, url, user_id, num_tags } = req.body;
-    const updatedLog = { log_name, description, url, user_id, num_tags };
+    const { log_name, description, url, num_tags } = req.body;
+    const user_id = req.user.id;
+    const updatedLog = { log_name, description, url };
     const { logs_id } = req.params;
+
     const numberOfReqBodyVal = Object.values(updatedLog).filter(Boolean).length;
     if (numberOfReqBodyVal === 0) {
       logger.error("Patch request needs at least one field");
       return res.status(400).json({
         error: {
-          message: `Request body must contain must not be empty`,
+          message: `Request body must not be empty`,
         },
       });
     }
+
+    updatedLog.user_id = user_id;
+    updatedLog.num_tags = num_tags;
+
     LogsService.updateLogs(knexInstance, logs_id, updatedLog)
       .then((updatedRow) => {
         if (!updatedRow) {
@@ -105,9 +115,9 @@ logsRouter
       .catch(next);
   })
   //DELETE a log
-  .delete(/* requireAuth */ jsonBodyParser, (req, res, next) => {
+  .delete(jsonBodyParser, (req, res, next) => {
     const knexInstance = req.app.get("db");
-    const { user_id } = req.body;
+    const user_id = req.user.id;
     const { logs_id } = req.params;
     LogsService.deleteLogs(knexInstance, logs_id, user_id)
       .then(() => {
@@ -115,6 +125,32 @@ logsRouter
           `Log Succesfully deleted with log id ${logs_id} uploaded by user with id ${user_id}`
         );
         res.status(204).end();
+      })
+      .catch(next);
+  });
+
+//GET a logs list of tags
+logsRouter
+  .route("/:logs_id/tags")
+  .all(requireAuth)
+  .get((req, res, next) => {
+    const knexInstance = req.app.get("db");
+    const { logs_id } = req.params;
+    const user_id = req.user.id;
+
+    LogsService.getLogsById(knexInstance, logs_id, user_id)
+      .then((log) => {
+        if (!log) {
+          logger.error("log does not exist when after calling by logs_id");
+          return res.status(404).json({
+            error: { message: `Log does not exist` },
+          });
+        }
+        LogsService.getTagsByLogsId(knexInstance, logs_id, user_id).then(
+          (tags) => {
+            res.json(tags.map(sanitizeTags));
+          }
+        );
       })
       .catch(next);
   });

@@ -228,12 +228,6 @@ tagsRouter
         }
         TagsService.getLogsByTagsId(knexInstance, tags_id, user_id).then(
           (logs) => {
-            if (!logs) {
-              logger.error("Logs does not exist after calling getLogsByTagsId");
-              return res.status(400).json({
-                error: { message: `Logs does not exist` },
-              });
-            }
             res.json(logs.map(sanitizeLogs));
           }
         );

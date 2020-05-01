@@ -1,26 +1,29 @@
-# Express Boilerplate!
+# Tag-A-Log - Server API
 
-This is a boilerplate project used for starting new projects!
+## LIVE APP:
 
-## Set up
+- Tag-A-Log = - https://tag-a-log.now.sh/
+- Tag-A-Log-API_Endpoint = https://arcane-ocean-61329.herokuapp.com/
 
-Complete the following steps to start a new project (NEW-PROJECT-NAME):
+## Summary
 
-1. Clone this repository to your local machine `git clone BOILERPLATE-URL NEW-PROJECTS-NAME`
-2. `cd` into the cloned repository
-3. Make a fresh start of the git history for this project with `rm -rf .git && git init`
-4. Install the node dependencies `npm install`
-5. Move the example Environment file to `.env` that will be ignored by git and read by the express server `mv example.env .env`
-6. Edit the contents of the `package.json` to use NEW-PROJECT-NAME instead of `"name": "express-boilerplate",`
+- A Node.js, Express and PostreSQL server API that handles CRUD requests for the Tag-A-Log app. This server utilizes RESTful API architecture, mocha, chai and supertest endpoints testing and validation, JWT and bcryptjs hashing authentication, XSS cross-site scripting sanitation, and Knex library for query building and database management.
 
-## Scripts
+## Tech Stack
 
-Start the application `npm start`
+- JavaScript ES6
+- Node.js
+- Express
+- Mocha, Chai and Supertest
+- PostgreSQL
+- Morgan and Winston logger
+- Knex
+- XSS
+- bcryptjs
+- jsonwebtoken
+- Treeize
 
-Start nodemon for the application `npm run dev`
+## In Development
 
-Run the tests `npm test`
-
-## Deploying
-
-When your new project is ready for deployment, add a new Heroku application with `heroku create`. This will make a new git remote called "heroku" and you can then `npm run deploy` which will push to this remote's master branch.
+- Optimize Database Query to minimize fetch request
+- Handle Image and File uploads

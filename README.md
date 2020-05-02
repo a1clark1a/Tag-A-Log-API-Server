@@ -23,6 +23,54 @@
 - jsonwebtoken
 - Treeize
 
+## API-ENDPOINTS
+
+### logs
+
+- `/GET /api/logs`
+
+- `/GET /api/logs/:logs_id`
+
+- `/GET /api/logs/:logs_id/tags`
+
+- `/POST /api/logs`
+
+- `/DELETE /api/logs/:logs_id`
+
+- `/PATCH /api/logs/:logs_id`
+
+### users
+
+- `/GET /api/users` -
+
+- `/POST /api/users` - Request body needs a password, user_name, email
+
+### tags
+
+- `/GET /api/tags`
+
+- `/GET /api/tags/:tags_id`
+
+- `/GET /api/tags/:tags_id/logs`
+
+- `/POST /api/tags`
+
+- `/DELETE /api/tags/:tags_id`
+
+- `/PATCH /api/tags/:tags_id`
+
+### logs-tags relations
+
+- `/GET /api/relations`
+
+- `/GET /api/relations/:logs_id/:tags_id`
+
+- `/POST /api/relations`
+
+- `/DELETE /api/relations/:logs_id/:tags_id`
+
+- `/PATCH /api/relations/:logs_id/:tags_id`
+
 ## In Development
 
 - Optimize Database Query to minimize fetch request
